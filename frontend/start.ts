@@ -1,48 +1,82 @@
+type Coord = [number, number];
+
 class Player {
-    x: number;
-    y: number;
+    pos: Coord;
+    dir: Coord;
     size: number;
-    speed: number;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
+    mvmnt: MovementController;
 
-    constructor(x: number, y: number, size: number, speed: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-        this.x = x;
-        this.y = y;
+    constructor(size: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mvmnt: MovementController) {
+        this.pos = [0, 0];
+        this.dir = [0, 0];
         this.size = size;
-        this.speed = speed;
         this.canvas = canvas;
         this.ctx = ctx;
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        this.canvas.height = window.innerHeight;
+        this.canvas.width = window.innerWidth;
+        this.mvmnt = mvmnt;
     }
+
+    x() { return this.pos[0] };
+    y() { return this.pos[1] };
 
     draw() {
         this.ctx.fillStyle = 'blue';
-        this.ctx.fillRect(this.x, this.y, this.size, this.size);
+        this.pos = this.mvmnt.calcPos(this.dir, this.pos);
+        this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
     }
 
-    move(direction: string) {
+    setDir(direction: string) {
         switch (direction) {
             case 'ArrowUp':
-                if (this.y > 0) this.y -= this.speed;
+                if (this.y() > 0) this.dir[1] = -1;
                 break;
             case 'ArrowDown':
-                if (this.y + this.size < this.canvas.height) this.y += this.speed;
+                if (this.y() + this.size < this.canvas.height) this.dir[1] = 1;
                 break;
             case 'ArrowLeft':
-                if (this.x > 0) this.x -= this.speed;
+                if (this.x() > 0) this.dir[0] = -1;
                 break;
             case 'ArrowRight':
-                if (this.x + this.size < this.canvas.width) this.x += this.speed;
+                if (this.x() + this.size < this.canvas.width) this.dir[0] = 1;
                 break;
         }
     }
 }
 
-document.addEventListener('keydown', (event) => {
-    console.log(event)
-});
+class MovementController {
+    speed: Coord;
+    accel: Coord;
+    maxSpd: Coord;
+
+    constructor() {
+        this.speed = [0, 0];
+        this.accel = [1, 1];
+        this.maxSpd = [20, 20];
+    }
+
+    calcPos(dir: Coord, pos: Coord) : Coord {
+        if (dir[0] === 0 && dir[1] === 0) return pos;
+        console.log(dir, pos, this.speed);
+        // calculate the direction unit vector
+        const vecLen = Math.sqrt(dir[0]**2 + dir[1]**2);
+        const unitVec = [dir[0]/vecLen, dir[1]/vecLen];
+
+        // Add speed according to the unit vector
+        this.speed = [
+            this.speed[0] + unitVec[0] * this.accel[0],
+            this.speed[1] + unitVec[1] * this.accel[1]
+        ];
+
+        // add current speed to coord
+        return [
+            pos[0] + this.speed[0],
+            pos[1] + this.speed[1]
+        ];
+    }
+}
 
 // Start the game loop
 window.addEventListener('load', () => {
@@ -52,7 +86,7 @@ window.addEventListener('load', () => {
     const ctx = <CanvasRenderingContext2D> canvas.getContext('2d');
     if (!ctx) { throw new Error("Could not get context"); }
 
-    const player = new Player(canvas.width / 2, canvas.height/2, 30, 10, canvas, ctx);
+    const player = new Player(30, canvas, ctx, new MovementController());
 
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -62,8 +96,7 @@ window.addEventListener('load', () => {
     }
 
     document.addEventListener('keydown', (event) => {
-        console.log(event)
-        player.move(event.key);
+        player.setDir(event.key);
     });
 
     gameLoop();

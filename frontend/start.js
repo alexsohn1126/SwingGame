@@ -1,43 +1,71 @@
 var Player = /** @class */ (function () {
-    function Player(x, y, size, speed, canvas, ctx) {
-        this.x = x;
-        this.y = y;
+    function Player(size, canvas, ctx, mvmnt) {
+        this.pos = [0, 0];
+        this.dir = [0, 0];
         this.size = size;
-        this.speed = speed;
         this.canvas = canvas;
         this.ctx = ctx;
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        this.canvas.height = window.innerHeight;
+        this.canvas.width = window.innerWidth;
+        this.mvmnt = mvmnt;
     }
+    Player.prototype.x = function () { return this.pos[0]; };
+    ;
+    Player.prototype.y = function () { return this.pos[1]; };
+    ;
     Player.prototype.draw = function () {
         this.ctx.fillStyle = 'blue';
-        this.ctx.fillRect(this.x, this.y, this.size, this.size);
+        this.pos = this.mvmnt.calcPos(this.dir, this.pos);
+        this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
     };
-    Player.prototype.move = function (direction) {
+    Player.prototype.setDir = function (direction) {
         switch (direction) {
             case 'ArrowUp':
-                if (this.y > 0)
-                    this.y -= this.speed;
+                if (this.y() > 0)
+                    this.dir[1] = -1;
                 break;
             case 'ArrowDown':
-                if (this.y + this.size < this.canvas.height)
-                    this.y += this.speed;
+                if (this.y() + this.size < this.canvas.height)
+                    this.dir[1] = 1;
                 break;
             case 'ArrowLeft':
-                if (this.x > 0)
-                    this.x -= this.speed;
+                if (this.x() > 0)
+                    this.dir[0] = -1;
                 break;
             case 'ArrowRight':
-                if (this.x + this.size < this.canvas.width)
-                    this.x += this.speed;
+                if (this.x() + this.size < this.canvas.width)
+                    this.dir[0] = 1;
                 break;
         }
     };
     return Player;
 }());
-document.addEventListener('keydown', function (event) {
-    console.log(event);
-});
+var MovementController = /** @class */ (function () {
+    function MovementController() {
+        this.speed = [0, 0];
+        this.accel = [1, 1];
+        this.maxSpd = [20, 20];
+    }
+    MovementController.prototype.calcPos = function (dir, pos) {
+        if (dir[0] === 0 && dir[1] === 0)
+            return pos;
+        console.log(dir, pos, this.speed);
+        // calculate the direction unit vector
+        var vecLen = Math.sqrt(Math.pow(dir[0], 2) + Math.pow(dir[1], 2));
+        var unitVec = [dir[0] / vecLen, dir[1] / vecLen];
+        // Add speed according to the unit vector
+        this.speed = [
+            this.speed[0] + unitVec[0] * this.accel[0],
+            this.speed[1] + unitVec[1] * this.accel[1]
+        ];
+        // add current speed to coord
+        return [
+            pos[0] + this.speed[0],
+            pos[1] + this.speed[1]
+        ];
+    };
+    return MovementController;
+}());
 // Start the game loop
 window.addEventListener('load', function () {
     var canvas = document.getElementById('game');
@@ -48,7 +76,7 @@ window.addEventListener('load', function () {
     if (!ctx) {
         throw new Error("Could not get context");
     }
-    var player = new Player(canvas.width / 2, canvas.height / 2, 30, 10, canvas, ctx);
+    var player = new Player(30, canvas, ctx, new MovementController());
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         // Draw the player
@@ -56,8 +84,7 @@ window.addEventListener('load', function () {
         requestAnimationFrame(gameLoop);
     }
     document.addEventListener('keydown', function (event) {
-        console.log(event);
-        player.move(event.key);
+        player.setDir(event.key);
     });
     gameLoop();
 });
