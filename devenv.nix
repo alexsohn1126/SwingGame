@@ -3,6 +3,7 @@
 {
   packages = [
     pkgs.git
+    pkgs.nodejs
   ];
 
   languages.go.enable = true;
