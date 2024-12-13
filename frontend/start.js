@@ -45,19 +45,19 @@ var MovementController = /** @class */ (function () {
         this.speed = [0, 0];
         this.accel = [1, 1];
         this.maxSpd = [20, 20];
+        this.taper = [0.1, 0.1];
     }
     MovementController.prototype.calcPos = function (dir, pos) {
-        if (dir[0] === 0 && dir[1] === 0)
-            return pos;
+        var _this = this;
         console.log(dir, pos, this.speed);
         // calculate the direction unit vector
         var vecLen = Math.sqrt(Math.pow(dir[0], 2) + Math.pow(dir[1], 2));
-        var unitVec = [dir[0] / vecLen, dir[1] / vecLen];
+        var unitVec = vecLen === 0 ? [0, 0] : [dir[0] / vecLen, dir[1] / vecLen];
         // Add speed according to the unit vector
-        this.speed = [
-            this.speed[0] + unitVec[0] * this.accel[0],
-            this.speed[1] + unitVec[1] * this.accel[1]
-        ];
+        // air resistance will make the thing slow down by square of speed
+        this.speed = this.speed.map(function (spd, i) {
+            return spd + (unitVec[i] * _this.accel[i]) - ((Math.pow(spd, 2)) * _this.taper[i]);
+        });
         // add current speed to coord
         return [
             pos[0] + this.speed[0],

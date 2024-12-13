@@ -50,25 +50,26 @@ class MovementController {
     speed: Coord;
     accel: Coord;
     maxSpd: Coord;
+    taper: Coord;
 
     constructor() {
         this.speed = [0, 0];
         this.accel = [1, 1];
         this.maxSpd = [20, 20];
+        this.taper = [0.1, 0.1];
     }
 
     calcPos(dir: Coord, pos: Coord) : Coord {
-        if (dir[0] === 0 && dir[1] === 0) return pos;
         console.log(dir, pos, this.speed);
         // calculate the direction unit vector
         const vecLen = Math.sqrt(dir[0]**2 + dir[1]**2);
-        const unitVec = [dir[0]/vecLen, dir[1]/vecLen];
+        let unitVec = vecLen === 0 ? [0, 0] : [dir[0]/vecLen, dir[1]/vecLen];
 
         // Add speed according to the unit vector
-        this.speed = [
-            this.speed[0] + unitVec[0] * this.accel[0],
-            this.speed[1] + unitVec[1] * this.accel[1]
-        ];
+        // air resistance will make the thing slow down by square of speed
+        this.speed = this.speed.map((spd, i) => {
+            return spd + (unitVec[i] * this.accel[i]) - ((spd**2) * this.taper[i]);
+        }) as Coord;
 
         // add current speed to coord
         return [
