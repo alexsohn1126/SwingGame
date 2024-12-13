@@ -57,7 +57,6 @@ var MovementController = /** @class */ (function () {
         // Add speed according to the unit vector
         this.vel = this.vel.map(function (spd, i) {
             var newSpd = spd + (unitVec[i] * _this.accel[i]) + _this.drag(spd, _this.taper[i]);
-            console.log(newSpd);
             return Math.abs(newSpd) > _this.stopThr || vecLen > 0 ? newSpd : 0;
         });
         // add current speed to coord
