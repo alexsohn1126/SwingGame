@@ -28,54 +28,66 @@ class Player {
         this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
     }
 
-    setDir(direction: string) {
+    setDir(direction: string, keyup: boolean) {
         switch (direction) {
+            case 'w':
             case 'ArrowUp':
-                if (this.y() > 0) this.dir[1] = -1;
+                this.dir[1] = keyup ? 0 : -1;
                 break;
+            case 's':
             case 'ArrowDown':
-                if (this.y() + this.size < this.canvas.height) this.dir[1] = 1;
+                this.dir[1] = keyup ? 0 : 1;
                 break;
+            case 'a':
             case 'ArrowLeft':
-                if (this.x() > 0) this.dir[0] = -1;
+                this.dir[0] = keyup ? 0 : -1;
                 break;
+            case 'd':
             case 'ArrowRight':
-                if (this.x() + this.size < this.canvas.width) this.dir[0] = 1;
+                this.dir[0] = keyup ? 0 : 1;
                 break;
         }
     }
 }
 
 class MovementController {
-    speed: Coord;
+    vel: Coord;
     accel: Coord;
-    maxSpd: Coord;
     taper: Coord;
+    linDrag: number;
+    stopThr: number;
 
     constructor() {
-        this.speed = [0, 0];
-        this.accel = [1, 1];
-        this.maxSpd = [20, 20];
-        this.taper = [0.1, 0.1];
+        this.vel = [0, 0];
+        this.accel = [2.8, 2.8];
+        this.taper = [0.01, 0.01];
+        this.linDrag = 0.1;
+        this.stopThr = 0.05;
     }
 
     calcPos(dir: Coord, pos: Coord) : Coord {
-        console.log(dir, pos, this.speed);
+        console.log(dir, pos, this.vel);
         // calculate the direction unit vector
         const vecLen = Math.sqrt(dir[0]**2 + dir[1]**2);
         let unitVec = vecLen === 0 ? [0, 0] : [dir[0]/vecLen, dir[1]/vecLen];
 
         // Add speed according to the unit vector
-        // air resistance will make the thing slow down by square of speed
-        this.speed = this.speed.map((spd, i) => {
-            return spd + (unitVec[i] * this.accel[i]) - ((spd**2) * this.taper[i]);
+        this.vel = this.vel.map((spd, i) => {
+            let newSpd = spd + (unitVec[i] * this.accel[i]) + this.drag(spd, this.taper[i]);
+            return Math.abs(newSpd) > this.stopThr || vecLen > 0? newSpd : 0;
         }) as Coord;
 
         // add current speed to coord
         return [
-            pos[0] + this.speed[0],
-            pos[1] + this.speed[1]
+            pos[0] + this.vel[0],
+            pos[1] + this.vel[1]
         ];
+    }
+
+    drag(spd: number, c: number) {
+        const dragdir = -1 * (Math.abs(spd)/spd || 0);
+        const drag = c * dragdir * spd ** 2 + dragdir * this.linDrag;
+        return drag;
     }
 }
 
@@ -97,7 +109,11 @@ window.addEventListener('load', () => {
     }
 
     document.addEventListener('keydown', (event) => {
-        player.setDir(event.key);
+        player.setDir(event.key, false);
+    });
+
+    document.addEventListener('keyup', (event) => {
+        player.setDir(event.key, true);
     });
 
     gameLoop();
