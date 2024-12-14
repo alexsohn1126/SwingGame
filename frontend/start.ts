@@ -2,15 +2,25 @@ type Coord = [number, number];
 
 class Player {
     pos: Coord;
-    dir: Coord;
     size: number;
+    keys: {
+        up: boolean,
+        down: boolean,
+        left: boolean,
+        right: boolean
+    };
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     mvmnt: MovementController;
 
     constructor(size: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mvmnt: MovementController) {
         this.pos = [0, 0];
-        this.dir = [0, 0];
+        this.keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        }
         this.size = size;
         this.canvas = canvas;
         this.ctx = ctx;
@@ -24,29 +34,38 @@ class Player {
 
     draw() {
         this.ctx.fillStyle = 'blue';
-        this.pos = this.mvmnt.calcPos(this.dir, this.pos);
+        this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
         this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
     }
 
-    setDir(direction: string, keyup: boolean) {
+    setDir(direction: string, keyup: boolean): void {
         switch (direction) {
             case 'w':
             case 'ArrowUp':
-                this.dir[1] = keyup ? 0 : -1;
+                this.keys['up'] = !keyup;
                 break;
             case 's':
             case 'ArrowDown':
-                this.dir[1] = keyup ? 0 : 1;
+                this.keys['down'] = !keyup;
                 break;
             case 'a':
             case 'ArrowLeft':
-                this.dir[0] = keyup ? 0 : -1;
+                this.keys['left'] = !keyup;
                 break;
             case 'd':
             case 'ArrowRight':
-                this.dir[0] = keyup ? 0 : 1;
+                this.keys['right'] = !keyup;
                 break;
         }
+    }
+
+    getDir(): [number, number] {
+        let dir = [0,0] as [number, number];
+        dir[1] += this.keys['up']? -1 : 0;
+        dir[1] += this.keys['down']? 1 : 0;
+        dir[0] += this.keys['left']? -1 : 0;
+        dir[0] += this.keys['right']? 1 : 0;
+        return dir;
     }
 }
 

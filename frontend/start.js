@@ -1,7 +1,12 @@
 var Player = /** @class */ (function () {
     function Player(size, canvas, ctx, mvmnt) {
         this.pos = [0, 0];
-        this.dir = [0, 0];
+        this.keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        };
         this.size = size;
         this.canvas = canvas;
         this.ctx = ctx;
@@ -15,28 +20,36 @@ var Player = /** @class */ (function () {
     ;
     Player.prototype.draw = function () {
         this.ctx.fillStyle = 'blue';
-        this.pos = this.mvmnt.calcPos(this.dir, this.pos);
+        this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
         this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
     };
     Player.prototype.setDir = function (direction, keyup) {
         switch (direction) {
             case 'w':
             case 'ArrowUp':
-                this.dir[1] = keyup ? 0 : -1;
+                this.keys['up'] = !keyup;
                 break;
             case 's':
             case 'ArrowDown':
-                this.dir[1] = keyup ? 0 : 1;
+                this.keys['down'] = !keyup;
                 break;
             case 'a':
             case 'ArrowLeft':
-                this.dir[0] = keyup ? 0 : -1;
+                this.keys['left'] = !keyup;
                 break;
             case 'd':
             case 'ArrowRight':
-                this.dir[0] = keyup ? 0 : 1;
+                this.keys['right'] = !keyup;
                 break;
         }
+    };
+    Player.prototype.getDir = function () {
+        var dir = [0, 0];
+        dir[1] += this.keys['up'] ? -1 : 0;
+        dir[1] += this.keys['down'] ? 1 : 0;
+        dir[0] += this.keys['left'] ? -1 : 0;
+        dir[0] += this.keys['right'] ? 1 : 0;
+        return dir;
     };
     return Player;
 }());
