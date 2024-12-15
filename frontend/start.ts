@@ -40,6 +40,9 @@ class Player {
     draw() {
         this.ctx.fillStyle = 'blue';
         this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
+
+        // Draw player (need to clear path before drawing)
+        this.ctx.beginPath();
         this.ctx.arc(
             this.pos[0],
             this.pos[1],
