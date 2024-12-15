@@ -1,4 +1,9 @@
 type Coord = [number, number];
+type RGB = `rgb(${number}, ${number}, ${number})`;
+type RGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
+type HEX = `#${string}`;
+
+type Color = RGB | RGBA | HEX;
 
 class Player {
     pos: Coord;
@@ -14,7 +19,6 @@ class Player {
     mvmnt: MovementController;
 
     constructor(size: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mvmnt: MovementController) {
-        this.pos = [0, 0];
         this.keys = {
             up: false,
             down: false,
@@ -24,8 +28,9 @@ class Player {
         this.size = size;
         this.canvas = canvas;
         this.ctx = ctx;
-        this.canvas.height = window.innerHeight;
         this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.pos = [this.canvas.width/2, this.canvas.height/2];
         this.mvmnt = mvmnt;
     }
 
@@ -35,7 +40,13 @@ class Player {
     draw() {
         this.ctx.fillStyle = 'blue';
         this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
-        this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
+        this.ctx.arc(
+            this.pos[0],
+            this.pos[1],
+            this.size,
+            0, Math.PI * 2
+        );
+        this.ctx.fill();
     }
 
     setDir(direction: string, keyup: boolean): void {
@@ -110,7 +121,6 @@ class MovementController {
     }
 }
 
-// Start the game loop
 window.addEventListener('load', () => {
     const canvas = <HTMLCanvasElement> document.getElementById('game');
     if (!canvas) { throw new Error("Could not find canvas"); }
@@ -122,7 +132,6 @@ window.addEventListener('load', () => {
 
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Draw the player
         player.draw();
         requestAnimationFrame(gameLoop);
     }

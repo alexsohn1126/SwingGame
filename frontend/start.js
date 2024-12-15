@@ -1,6 +1,5 @@
 var Player = /** @class */ (function () {
     function Player(size, canvas, ctx, mvmnt) {
-        this.pos = [0, 0];
         this.keys = {
             up: false,
             down: false,
@@ -10,8 +9,9 @@ var Player = /** @class */ (function () {
         this.size = size;
         this.canvas = canvas;
         this.ctx = ctx;
-        this.canvas.height = window.innerHeight;
         this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.pos = [this.canvas.width / 2, this.canvas.height / 2];
         this.mvmnt = mvmnt;
     }
     Player.prototype.x = function () { return this.pos[0]; };
@@ -21,7 +21,8 @@ var Player = /** @class */ (function () {
     Player.prototype.draw = function () {
         this.ctx.fillStyle = 'blue';
         this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
-        this.ctx.fillRect(this.x(), this.y(), this.size, this.size);
+        this.ctx.arc(this.pos[0], this.pos[1], this.size, 0, Math.PI * 2);
+        this.ctx.fill();
     };
     Player.prototype.setDir = function (direction, keyup) {
         switch (direction) {
@@ -85,7 +86,6 @@ var MovementController = /** @class */ (function () {
     };
     return MovementController;
 }());
-// Start the game loop
 window.addEventListener('load', function () {
     var canvas = document.getElementById('game');
     if (!canvas) {
@@ -98,7 +98,6 @@ window.addEventListener('load', function () {
     var player = new Player(30, canvas, ctx, new MovementController());
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Draw the player
         player.draw();
         requestAnimationFrame(gameLoop);
     }
