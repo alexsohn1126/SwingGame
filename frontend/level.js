@@ -14,6 +14,11 @@ class LevelGrid {
             this.grid.set(cell, new Set());
         this.grid.get(cell).add(levelObj);
     }
+    removeLevelObj(levelObj, x, y) {
+        const cell = this.getCell(x, y);
+        if (this.grid.has(cell))
+            this.grid.get(cell).delete(levelObj);
+    }
     getNearbyObj(x, y) {
         const cell = this.getCell(x, y);
         return this.grid.get(cell) || new Set();
@@ -32,14 +37,6 @@ class LevelGrid {
         const cellY = key & 0xFFFFFFFF;
         return [cellX, cellY];
     }
-}
-class LevelObject {
-    constructor(pos, color) {
-        this.pos = pos;
-        this.color = color;
-    }
-}
-class Collidable extends LevelObject {
 }
 class Wall extends Collidable {
     constructor(pos, color, endPos) {

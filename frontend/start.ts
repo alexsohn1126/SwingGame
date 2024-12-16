@@ -5,8 +5,64 @@ type HEX = `#${string}`;
 
 type Color = RGB | RGBA | HEX;
 
-class Player {
+class LevelObject {
     pos: Coord;
+    color: Color;
+
+    constructor(pos: Coord, color: Color) {
+        this.pos = pos;
+        this.color = color;
+    }
+
+    draw(): void {
+        throw new Error("Imlement draw function for every LevelObject");
+    }
+}
+
+class Collidable extends LevelObject {
+    constructor(pos: Coord, color: Color) {
+        super(pos, color);
+    }
+
+    findOccupyingCells() {
+        throw new Error("Implement findOccupyingCells function for every collidable object!");
+    }
+
+    checkIfCollided(obj: LevelObject): boolean {
+        throw new Error("Implement checkIfCollided function for every collidable object!");
+    }
+}
+
+class Renderer {
+    private static _instance: Renderer | undefined;
+    public bg: Set<LevelObject>;
+    public level: Set<LevelObject>;
+    public player: Set<LevelObject>;
+
+    private constructor() {
+        this.bg = new Set();
+        this.level = new Set();
+        this.player = new Set();
+    }
+
+    public static instance(): Renderer {
+        if (this._instance === undefined) {
+            this._instance = new Renderer();
+        }
+        return this._instance;
+    }
+
+    public draw(): void {
+        const drawOrder = [this.bg, this.level, this.player] as Set<LevelObject>[];
+        for (var setObj of drawOrder) {
+            for (var obj of setObj) {
+                obj.draw();
+            }
+        }
+    }
+}
+
+class Player extends Collidable{
     size: number;
     keys: {
         up: boolean,
@@ -19,6 +75,9 @@ class Player {
     mvmnt: MovementController;
 
     constructor(size: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, mvmnt: MovementController) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        super([canvas.width/2, canvas.height/2], "#ff00ff");
         this.keys = {
             up: false,
             down: false,
@@ -28,9 +87,6 @@ class Player {
         this.size = size;
         this.canvas = canvas;
         this.ctx = ctx;
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-        this.pos = [this.canvas.width/2, this.canvas.height/2];
         this.mvmnt = mvmnt;
     }
 
@@ -99,7 +155,7 @@ class MovementController {
     }
 
     calcPos(dir: Coord, pos: Coord) : Coord {
-        console.log(dir, pos, this.vel);
+        // console.log(dir, pos, this.vel);
         // calculate the direction unit vector
         const vecLen = Math.sqrt(dir[0]**2 + dir[1]**2);
         let unitVec = vecLen === 0 ? [0, 0] : [dir[0]/vecLen, dir[1]/vecLen];
@@ -133,9 +189,12 @@ window.addEventListener('load', () => {
 
     const player = new Player(30, canvas, ctx, new MovementController());
 
+    const renderer = Renderer.instance();
+    renderer.player.add(player);
+
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        player.draw();
+        renderer.draw();
         requestAnimationFrame(gameLoop);
     }
 
