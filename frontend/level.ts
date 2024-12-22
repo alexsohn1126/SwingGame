@@ -22,7 +22,7 @@ class Collidable extends LevelObject {
         super(pos, color);
     }
 
-    findOccupyingCells() {
+    findOccupyingCells(): Set<string> {
         throw new Error("Implement findOccupyingCells function for every collidable object!");
     }
 
@@ -33,14 +33,15 @@ class Collidable extends LevelObject {
 
 class LevelGrid {
     // grid: Key: first 32 bits -> x coord last 32 -> y coord
-    private _instance: LevelGrid | undefined;
-    private grid: Map<number, Set<LevelObject>> = new Map();
-    private cellSize: number;
+    // the grid will have inclusive top and left side, exclusive otherwise
+    private static _instance: LevelGrid | undefined;
+    public grid: Map<string, Set<LevelObject>> = new Map();
+    public cellSize: number;
     
     private constructor() {
     }
 
-    public instance(): LevelGrid {
+    public static instance(): LevelGrid {
         if (this._instance === undefined) {
             this._instance = new LevelGrid();
         }
@@ -67,20 +68,24 @@ class LevelGrid {
         return this.grid.get(cell) || new Set();
     }
 
-    private getCell(x: number, y: number): number {
+    public getCell(x: number, y: number): string {
         // return cell number, first 32 bits is x and rest are y
         const cellX = Math.floor(x / this.cellSize);
         const cellY = Math.floor(y / this.cellSize);
         return this.encodeCellKey(cellX, cellY);
     }
 
-    private encodeCellKey(cellX: number, cellY: number): number {
-        return (cellX << 32) | (cellY & 0xFFFFFFFF);
+    public getCellCoord(x: number, y: number): Coord {
+        const key = this.getCell(x, y);
+        return this.decodeCellKey(key);
     }
 
-    private decodeCellKey(key: number): Coord {
-        const cellX = key >> 32;
-        const cellY = key & 0xFFFFFFFF;
+    private encodeCellKey(cellX: number, cellY: number): string {
+        return cellX.toString() + "," + cellY.toString();
+    }
+
+    private decodeCellKey(key: string): Coord {
+        const [cellX, cellY] = key.split(",").map(x => parseInt(x));
         return [cellX, cellY];
     }
 }
@@ -117,11 +122,11 @@ class Circle extends Collidable {
         Renderer.instance().level.add(this);
     }
 
-    render() {
+    render(): void{
         this.draw();
     }
 
-    draw() {
+    draw(): void {
         const ctx = CanvasManager.instance().ctx;
         ctx.fillStyle = this.color;
 
@@ -136,4 +141,60 @@ class Circle extends Collidable {
         ctx.fill();
     }
 
+    findOccupyingCells(): Set<string> {
+        // Given a circle, we want to return all the cells that the circle occupies
+        // Because circle is mirrored both left right and top bottom,
+        // we can get the cells in one quadrant, and get the rest by 
+        // a simple calculation
+
+        // for example, if we are going through the circle's top left quadrant and 
+        // we find that cell at (x, y) is occupied by the circle
+        // then we know the cells at (x+circleRad, y), (x+circleRad, y+circleRad), and (x, y+circleRad)
+        // are also occupied by the circle
+
+        // iterate through top left quadrant
+        let cells = new Set() as Set<string>;
+        const xStart = this.pos[0] - this.radius;
+        const yStart = this.pos[1] - this.radius;
+
+        const lvl = LevelGrid.instance();
+
+        for(let x = xStart; x < xStart+this.radius; x += lvl.cellSize) {
+            for(let y = yStart; y < yStart+this.radius; y += lvl.cellSize) {
+                cells.add(lvl.getCell(x, y));
+                cells.add(lvl.getCell(x, y+lvl.cellSize));
+                cells.add(lvl.getCell(x+lvl.cellSize, y));
+                cells.add(lvl.getCell(x+lvl.cellSize, y+lvl.cellSize));
+            }
+        }
+
+        return cells;
+    }
 }
+
+class LevelGridVisualizer {
+    constructor() {
+    }
+
+    drawGrid(player: Player): void {
+        const lvl = LevelGrid.instance();
+        const canvas = CanvasManager.instance().canvas;
+        // Red if current square occupied, black if not
+        const color = "#000";
+        const playerCells = player.findOccupyingCells();
+
+        for(let x = 0; x <= canvas.width; x += lvl.cellSize) {
+            for(let y = 0; y <= canvas.width; y += lvl.cellSize) {
+                const [cellX, cellY] = lvl.getCellCoord(x, y).map((x) => x*lvl.cellSize);
+
+                console.log(cellX, cellY);
+                const currCell = lvl.getCell(x, y);
+
+                new Wall([cellX, cellY], color, [cellX+lvl.cellSize, cellY]);
+                new Wall([cellX, cellY], color, [cellX, cellY+lvl.cellSize]);
+            }
+        }
+    }
+}
+
+// const color = playerCells.has(currCell)? "#ff0000" : "#000000";

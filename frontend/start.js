@@ -123,9 +123,14 @@ window.addEventListener('load', () => {
     const ctx = canvasManager.ctx;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    const player = new Player(30);
+    const playerSize = 30;
+    const player = new Player(playerSize);
     new Wall([0, 0], "#000000", [200, 200]);
     const renderer = Renderer.instance();
+    const levelGrid = LevelGrid.instance();
+    levelGrid.init(playerSize * 2);
+    const gridVisualizer = new LevelGridVisualizer();
+    gridVisualizer.drawGrid(player);
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         renderer.draw();
