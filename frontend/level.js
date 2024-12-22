@@ -2,10 +2,37 @@
  * We eventually want the level to have a grid that has the origin set from the sphere's original spawn point
  * so we need a separate coord system from canvas2d
  */
+class LevelObject {
+    constructor(pos, color) {
+        this.pos = pos;
+        this.color = color;
+    }
+    render() {
+        throw new Error("Implement render function for every LevelObject");
+    }
+}
+class Collidable extends LevelObject {
+    constructor(pos, color) {
+        super(pos, color);
+    }
+    findOccupyingCells() {
+        throw new Error("Implement findOccupyingCells function for every collidable object!");
+    }
+    checkIfCollided(obj) {
+        throw new Error("Implement checkIfCollided function for every collidable object!");
+    }
+}
 class LevelGrid {
-    constructor(cellSize) {
-        // grid: Key: first 32 bits -> x coord last 32 -> y coord
+    constructor() {
         this.grid = new Map();
+    }
+    instance() {
+        if (this._instance === undefined) {
+            this._instance = new LevelGrid();
+        }
+        return this._instance;
+    }
+    init(cellSize) {
         this.cellSize = cellSize;
     }
     addLevelObj(levelObj, x, y) {
@@ -39,8 +66,8 @@ class LevelGrid {
     }
 }
 class Wall extends Collidable {
-    constructor(pos, color, endPos) {
-        super(pos, color);
+    constructor(startPos, color, endPos) {
+        super(startPos, color);
         this.endPos = endPos;
     }
 }
@@ -49,4 +76,16 @@ class Circle extends Collidable {
         super(pos, color);
         this.radius = radius;
     }
+    render() {
+        this.draw();
+    }
+    draw() {
+        const ctx = CanvasManager.instance().ctx;
+        ctx.fillStyle = this.color;
+        // Draw player (need to clear path before drawing)
+        ctx.beginPath();
+        ctx.arc(this.pos[0], this.pos[1], this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
+// time to hardcode in some values

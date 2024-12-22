@@ -1,23 +1,3 @@
-class LevelObject {
-    constructor(pos, color) {
-        this.pos = pos;
-        this.color = color;
-    }
-    draw() {
-        throw new Error("Imlement draw function for every LevelObject");
-    }
-}
-class Collidable extends LevelObject {
-    constructor(pos, color) {
-        super(pos, color);
-    }
-    findOccupyingCells() {
-        throw new Error("Implement findOccupyingCells function for every collidable object!");
-    }
-    checkIfCollided(obj) {
-        throw new Error("Implement checkIfCollided function for every collidable object!");
-    }
-}
 class Renderer {
     constructor() {
         this.bg = new Set();
@@ -34,38 +14,30 @@ class Renderer {
         const drawOrder = [this.bg, this.level, this.player];
         for (var setObj of drawOrder) {
             for (var obj of setObj) {
-                obj.draw();
+                obj.render();
             }
         }
     }
 }
-class Player extends Collidable {
-    constructor(size, canvas, ctx, mvmnt) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        super([canvas.width / 2, canvas.height / 2], "#ff00ff");
+class Player extends Circle {
+    constructor(radius) {
+        const canvas = CanvasManager.instance().canvas;
+        super([canvas.width / 2, canvas.height / 2], "#ff00ff", radius);
         this.keys = {
             up: false,
             down: false,
             left: false,
             right: false
         };
-        this.size = size;
-        this.canvas = canvas;
-        this.ctx = ctx;
-        this.mvmnt = mvmnt;
+        this.mvmnt = new MovementController();
     }
     x() { return this.pos[0]; }
     ;
     y() { return this.pos[1]; }
     ;
-    draw() {
-        this.ctx.fillStyle = 'blue';
+    render() {
         this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
-        // Draw player (need to clear path before drawing)
-        this.ctx.beginPath();
-        this.ctx.arc(this.pos[0], this.pos[1], this.size, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.draw();
     }
     setDir(direction, keyup) {
         switch (direction) {
@@ -126,18 +98,34 @@ class MovementController {
         return drag;
     }
 }
+class CanvasManager {
+    constructor() {
+        this.canvas = document.getElementById('game');
+        if (!this.canvas) {
+            throw new Error("Could not find canvas");
+        }
+        this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+            throw new Error("Could not get context");
+        }
+    }
+    static instance() {
+        if (this._instance === undefined) {
+            this._instance = new CanvasManager();
+        }
+        return this._instance;
+    }
+}
 window.addEventListener('load', () => {
-    const canvas = document.getElementById('game');
-    if (!canvas) {
-        throw new Error("Could not find canvas");
-    }
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error("Could not get context");
-    }
-    const player = new Player(30, canvas, ctx, new MovementController());
+    const canvasManager = CanvasManager.instance();
+    const canvas = canvasManager.canvas;
+    const ctx = canvasManager.ctx;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const player = new Player(30);
     const renderer = Renderer.instance();
     renderer.player.add(player);
+    // const wall1 = new Wall([0, 0], "#000000", [200, 200]);
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         renderer.draw();

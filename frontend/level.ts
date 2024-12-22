@@ -3,27 +3,66 @@
  * so we need a separate coord system from canvas2d
  */
 
+class LevelObject {
+    pos: Coord;
+    color: Color;
+
+    constructor(pos: Coord, color: Color) {
+        this.pos = pos;
+        this.color = color;
+    }
+
+    render(): void {
+        throw new Error("Implement render function for every LevelObject");
+    }
+}
+
+class Collidable extends LevelObject {
+    constructor(pos: Coord, color: Color) {
+        super(pos, color);
+    }
+
+    findOccupyingCells() {
+        throw new Error("Implement findOccupyingCells function for every collidable object!");
+    }
+
+    checkIfCollided(obj: LevelObject): boolean {
+        throw new Error("Implement checkIfCollided function for every collidable object!");
+    }
+}
+
 class LevelGrid {
     // grid: Key: first 32 bits -> x coord last 32 -> y coord
+    private _instance: LevelGrid | undefined;
     private grid: Map<number, Set<LevelObject>> = new Map();
     private cellSize: number;
     
-    constructor(cellSize: number) {
+    private constructor() {
+    }
+
+    public instance(): LevelGrid {
+        if (this._instance === undefined) {
+            this._instance = new LevelGrid();
+        }
+        return this._instance;
+    }
+
+    public init(cellSize: number) {
         this.cellSize = cellSize;
     }
 
-    addLevelObj(levelObj: LevelObject, x: number, y: number): void {
+    public addLevelObj(levelObj: LevelObject, x: number, y: number): void {
         const cell = this.getCell(x, y);
         if (!this.grid.has(cell)) this.grid.set(cell, new Set());
         this.grid.get(cell).add(levelObj);
     }
 
-    removeLevelObj(levelObj: LevelObject, x: number, y: number): void {
+    public removeLevelObj(levelObj: LevelObject, x: number, y: number): void {
         const cell = this.getCell(x, y);
         if (this.grid.has(cell)) this.grid.get(cell).delete(levelObj);
     }
 
-    getNearbyObj(x: number, y:number): Set<LevelObject> {
+    public getNearbyObj(x: number, y:number): Set<LevelObject> {
         const cell = this.getCell(x, y);
         return this.grid.get(cell) || new Set();
     }
@@ -49,8 +88,8 @@ class LevelGrid {
 class Wall extends Collidable {
     endPos: Coord;
 
-    constructor(pos: Coord, color: Color, endPos: Coord) {
-        super(pos, color);
+    constructor(startPos: Coord, color: Color, endPos: Coord) {
+        super(startPos, color);
         this.endPos = endPos;
     }
 }
@@ -62,4 +101,26 @@ class Circle extends Collidable {
         super(pos, color);
         this.radius = radius;
     }
+
+    render() {
+        this.draw();
+    }
+
+    draw() {
+        const ctx = CanvasManager.instance().ctx;
+        ctx.fillStyle = this.color;
+
+        // Draw player (need to clear path before drawing)
+        ctx.beginPath();
+        ctx.arc(
+            this.pos[0],
+            this.pos[1],
+            this.radius,
+            0, Math.PI * 2
+        );
+        ctx.fill();
+    }
+
 }
+
+// time to hardcode in some values
