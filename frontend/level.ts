@@ -91,6 +91,7 @@ class Wall extends Collidable {
     constructor(startPos: Coord, color: Color, endPos: Coord) {
         super(startPos, color);
         this.endPos = endPos;
+        Renderer.instance().level.add(this);
     }
 
     render() {
@@ -113,6 +114,7 @@ class Circle extends Collidable {
     constructor(pos: Coord, color: Color, radius: number) {
         super(pos, color);
         this.radius = radius;
+        Renderer.instance().level.add(this);
     }
 
     render() {
