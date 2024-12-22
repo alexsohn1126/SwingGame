@@ -80,6 +80,7 @@ class Wall extends Collidable {
     draw() {
         const ctx = CanvasManager.instance().ctx;
         ctx.beginPath();
+        ctx.strokeStyle = this.color;
         ctx.moveTo(...this.pos);
         ctx.lineTo(...this.endPos);
         ctx.stroke();
@@ -133,18 +134,19 @@ class LevelGridVisualizer {
     drawGrid(player) {
         const lvl = LevelGrid.instance();
         const canvas = CanvasManager.instance().canvas;
-        // Red if current square occupied, black if not
-        const color = "#000";
         const playerCells = player.findOccupyingCells();
+        let newBG = new Set();
         for (let x = 0; x <= canvas.width; x += lvl.cellSize) {
             for (let y = 0; y <= canvas.width; y += lvl.cellSize) {
                 const [cellX, cellY] = lvl.getCellCoord(x, y).map((x) => x * lvl.cellSize);
-                console.log(cellX, cellY);
-                const currCell = lvl.getCell(x, y);
-                new Wall([cellX, cellY], color, [cellX + lvl.cellSize, cellY]);
-                new Wall([cellX, cellY], color, [cellX, cellY + lvl.cellSize]);
+                const cellKey = lvl.getCell(x, y);
+                const color = playerCells.has(cellKey) ? "#ff0000" : "#000000";
+                newBG.add(new Wall([cellX, cellY], color, [cellX + lvl.cellSize, cellY]));
+                newBG.add(new Wall([cellX, cellY], color, [cellX, cellY + lvl.cellSize]));
             }
         }
+        Renderer.instance().level = newBG;
     }
 }
+// const currCell = lvl.getCell(x, y);
 // const color = playerCells.has(currCell)? "#ff0000" : "#000000";

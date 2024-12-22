@@ -174,10 +174,10 @@ window.addEventListener('load', () => {
     levelGrid.init(playerSize*2);
 
     const gridVisualizer = new LevelGridVisualizer();
-    gridVisualizer.drawGrid(player);
 
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        gridVisualizer.drawGrid(player);
         renderer.draw();
         requestAnimationFrame(gameLoop);
     }
