@@ -58,7 +58,7 @@ class Player extends Circle{
     x() { return this.pos[0] };
     y() { return this.pos[1] };
 
-    render() {
+    render() : void {
         this.pos = this.mvmnt.calcPos(this.getDir(), this.pos);
         this.draw();
     }
@@ -168,7 +168,8 @@ window.addEventListener('load', () => {
     const renderer = Renderer.instance();
     renderer.player.add(player);
 
-    // const wall1 = new Wall([0, 0], "#000000", [200, 200]);
+    const wall1 = new Wall([0, 0], "#000000", [200, 200]);
+    renderer.level.add(wall1);
 
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);

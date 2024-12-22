@@ -125,7 +125,8 @@ window.addEventListener('load', () => {
     const player = new Player(30);
     const renderer = Renderer.instance();
     renderer.player.add(player);
-    // const wall1 = new Wall([0, 0], "#000000", [200, 200]);
+    const wall1 = new Wall([0, 0], "#000000", [200, 200]);
+    renderer.level.add(wall1);
     function gameLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         renderer.draw();

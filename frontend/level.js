@@ -70,6 +70,16 @@ class Wall extends Collidable {
         super(startPos, color);
         this.endPos = endPos;
     }
+    render() {
+        this.draw();
+    }
+    draw() {
+        const ctx = CanvasManager.instance().ctx;
+        ctx.beginPath();
+        ctx.moveTo(...this.pos);
+        ctx.lineTo(...this.endPos);
+        ctx.stroke();
+    }
 }
 class Circle extends Collidable {
     constructor(pos, color, radius) {
@@ -88,4 +98,3 @@ class Circle extends Collidable {
         ctx.fill();
     }
 }
-// time to hardcode in some values
