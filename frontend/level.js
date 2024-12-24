@@ -148,5 +148,3 @@ class LevelGridVisualizer {
         Renderer.instance().level = newBG;
     }
 }
-// const currCell = lvl.getCell(x, y);
-// const color = playerCells.has(currCell)? "#ff0000" : "#000000";
